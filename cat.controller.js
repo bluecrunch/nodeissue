@@ -1,5 +1,3 @@
-
-
 const con = require("../config/DBConnections");
 const auth = require("../config/auth");
 const bcrypt = require('bcryptjs')
@@ -26,10 +24,10 @@ let getcats = async(req,res) => {
           if(results[0]["user_id"]){
 
             var sqlquery = "SELECT * FROM cats";
-            if(req.params.skillname){
-              sqlquery = sqlquery+" WHERE skill_url = ?"
+            if(req.params.catname){
+              sqlquery = sqlquery+" WHERE cat_url = ?"
             }
-            con.query(sqlquery,[req.params.skillname], function (error, results, fields) {
+            con.query(sqlquery,[req.params.catname], function (error, results, fields) {
               try{
                 if(results.length>0){
                   respo["data"] = results;
@@ -73,11 +71,11 @@ let getUsercats = async(req,res) => {
     con.query('SELECT * FROM users_token ut WHERE token = ?',[token], function (error, results, fields) {
         try{
           if(results[0]["user_id"]){
-            var sqlquery = "SELECT * FROM user_cats us JOIN cats s ON s.skill_id = us.skill_id WHERE us.user_id = ? ";
-            if(req.params.skillname){
-              sqlquery = sqlquery+"AND s.skill_url = ?"
+            var sqlquery = "SELECT * FROM user_cats us JOIN cats s ON s.cat_id = us.cat_id WHERE us.user_id = ? ";
+            if(req.params.catname){
+              sqlquery = sqlquery+"AND s.cat_url = ?"
             }
-            con.query(sqlquery,[results[0]["user_id"],req.params.skillname], function (error, results, fields) {
+            con.query(sqlquery,[results[0]["user_id"],req.params.catname], function (error, results, fields) {
               try{
                 if(results.length>0){
                   respo["data"] = results;
@@ -115,20 +113,20 @@ let getUsercats = async(req,res) => {
     });     
 };
 //if(results.length>0){
-let postUserSkill = async(req,res) => {
+let postUsercat = async(req,res) => {
   respo = {}  
   let token = req.headers['authorization'];
     con.query('SELECT * FROM users_token ut WHERE token = ?',[token], function (error, results, fields) {
         try{
           if(results[0]["user_id"]){
-            console.log("token valid "+req.body.skill_id)
-            con.query('SELECT * FROM user_cats WHERE user_id = ? AND skill_id = ?',[results[0]["user_id"],req.body.skill_id], function (error, resultSkillCheck, fields) {
+            console.log("token valid "+req.body.cat_id)
+            con.query('SELECT * FROM user_cats WHERE user_id = ? AND cat_id = ?',[results[0]["user_id"],req.body.cat_id], function (error, resultcatCheck, fields) {
               console.log("you are here")
               try{
-                if(resultSkillCheck.length==0){
+                if(resultcatCheck.length==0){
                   console.log("you here")
                   var randstr = makeid(10)
-                  con.query('INSERT INTO user_cats (user_id, skill_id,unique_key) VALUES(?,?,?)',[results[0]["user_id"],req.body.skill_id,randstr], function (error, resultPost, fields) {
+                  con.query('INSERT INTO user_cats (user_id, cat_id,unique_key) VALUES(?,?,?)',[results[0]["user_id"],req.body.cat_id,randstr], function (error, resultPost, fields) {
                     if(error){
                       console.log("No user found")
                       respo["error"] = {}
@@ -146,7 +144,7 @@ let postUserSkill = async(req,res) => {
                   }); 
                 }
                 else{
-                  respo["message"] = "Skill already in list";
+                  respo["message"] = "cat already in list";
                   respo["code"] = 200;
                   console.log(respo)
                   res.send(respo)                       
@@ -155,7 +153,7 @@ let postUserSkill = async(req,res) => {
               catch(error){
                 console.log("No user found")
                 respo["error"] = {}
-                respo["error"]["message"] = "Skill already in the list!";
+                respo["error"]["message"] = "cat already in the list!";
                 respo["error"]["code"] = 402;
                 res.send(respo)        
               }
@@ -175,23 +173,23 @@ let postUserSkill = async(req,res) => {
     });     
 };
 
-let deleteUserSkill = async(req,res) => {
+let deleteUsercat = async(req,res) => {
   respo = {}  
   let token = req.headers['authorization'];
     con.query('SELECT * FROM users_token ut WHERE token = ?',[token], function (error, results, fields) {
         try{
           if(results[0]["user_id"]){
-            console.log("token valid "+req.body.skill_id)
-            con.query('SELECT * FROM user_cats WHERE user_id = ? AND skill_id = ? AND user_cats_id = ?',[results[0]["user_id"],req.body.skill_id,req.body.user_cats_id], function (error, resultSkillCheck, fields) {
+            console.log("token valid "+req.body.cat_id)
+            con.query('SELECT * FROM user_cats WHERE user_id = ? AND cat_id = ? AND user_cats_id = ?',[results[0]["user_id"],req.body.cat_id,req.body.user_cats_id], function (error, resultcatCheck, fields) {
               console.log("you are here")
               try{
-                if(resultSkillCheck.length>0){
-                  console.log("you here "+results[0]["user_id"]+" "+req.body.skill_id+" "+req.body.user_cats_id)
-                  con.query('DELETE FROM user_cats WHERE user_id = ? AND skill_id = ? AND user_cats_id = ?',[results[0]["user_id"],req.body.skill_id,req.body.user_cats_id], function (error, resultPost, fields) {
+                if(resultcatCheck.length>0){
+                  console.log("you here "+results[0]["user_id"]+" "+req.body.cat_id+" "+req.body.user_cats_id)
+                  con.query('DELETE FROM user_cats WHERE user_id = ? AND cat_id = ? AND user_cats_id = ?',[results[0]["user_id"],req.body.cat_id,req.body.user_cats_id], function (error, resultPost, fields) {
                     if(error){
-                      console.log("Can't delete skill")
+                      console.log("Can't delete cat")
                       respo["error"] = {}
-                      respo["error"]["message"] = "Unable to delete skill: "+error;
+                      respo["error"]["message"] = "Unable to delete cat: "+error;
                       respo["error"]["code"] = 402;
                       res.send(respo)                   
                     }
@@ -205,16 +203,16 @@ let deleteUserSkill = async(req,res) => {
                   }); 
                 }
                 else{
-                  respo["message"] = "Error finding skill.";
+                  respo["message"] = "Error finding cat.";
                   respo["code"] = 200;
                   console.log(respo)
                   res.send(respo)                       
                 }
               }
               catch(error){
-                console.log("No skill found")
+                console.log("No cat found")
                 respo["error"] = {}
-                respo["error"]["message"] = "Skill not found!";
+                respo["error"]["message"] = "cat not found!";
                 respo["error"]["code"] = 402;
                 res.send(respo)        
               }
@@ -241,7 +239,7 @@ let getGradeRequests = async(req,res) => {
     con.query('SELECT * FROM users_token ut WHERE token = ?',[token], function (error, results, fields) {
         try{
           if(results[0]["user_id"]){
-            con.query('SELECT usr.user_id_invitee,usr.user_id_inviter,usr.skill_id, u.first_name,u.last_name,s.name,s.category,u.email FROM users_skill_requests usr JOIN users u ON usr.user_id_inviter = u.user_id JOIN cats s ON usr.skill_id = s.skill_id WHERE usr.user_id_invitee = ? AND usr.active = 1 LIMIT 0,20',[results[0]["user_id"]], function (error, results, fields) {
+            con.query('SELECT usr.user_id_invitee,usr.user_id_inviter,usr.cat_id, u.first_name,u.last_name,s.name,s.category,u.email FROM users_cat_requests usr JOIN users u ON usr.user_id_inviter = u.user_id JOIN cats s ON usr.cat_id = s.cat_id WHERE usr.user_id_invitee = ? AND usr.active = 1 LIMIT 0,20',[results[0]["user_id"]], function (error, results, fields) {
               try{
                 if(results.length>0){
                   respo["data"] = results;
@@ -285,7 +283,7 @@ let getGradeRequestB = async(req,res) => {
     con.query('SELECT * FROM users_token ut WHERE token = ?',[token], function (error, results, fields) {
         try{
           if(results[0]["user_id"]){
-            con.query('SELECT usr.user_id_invitee,usr.user_id_inviter,usr.skill_id, u.first_name,u.last_name,s.name,s.category,u.email FROM users_skill_requests usr JOIN users u ON usr.user_id_inviter = u.user_id JOIN cats s ON usr.skill_id = s.skill_id WHERE usr.user_id_invitee = ? AND usr.active = 1 LIMIT 0,20',[results[0]["user_id"]], function (error, results, fields) {
+            con.query('SELECT usr.user_id_invitee,usr.user_id_inviter,usr.cat_id, u.first_name,u.last_name,s.name,s.category,u.email FROM users_cat_requests usr JOIN users u ON usr.user_id_inviter = u.user_id JOIN cats s ON usr.cat_id = s.cat_id WHERE usr.user_id_invitee = ? AND usr.active = 1 LIMIT 0,20',[results[0]["user_id"]], function (error, results, fields) {
               try{
                 if(results.length>0){
                   respo["data"] = results;
@@ -334,4 +332,5 @@ let postGradeRequest = async(req,res) => {
   console.log(checkMail(req.body.email));
 };
 
-module.exports = {getcats,getUsercats,postUserSkill,deleteUserSkill,getGradeRequests,postGradeRequest,checkMail}
+module.exports = {getcats,getUsercats,postUsercat,deleteUsercat,getGradeRequests,postGradeRequest,checkMail}
+
